@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Toko Obat</title>
+
+<!-- ICON -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+:root {
+  --green: #6BCF9D;
+  --bg: #f9faf7;
+  --dark: #333;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--dark);
+}
+
+/* ===== HEADER ===== */
+header {
+  background: white;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+header i {
+  font-size: 36px;
+  color: var(--green);
+}
+
+header h1 {
+  font-size: 22px;
+  margin: 0;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+/* ===== CARD ===== */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.05);
+}
+
+/* ===== FORM ===== */
+label {
+  margin-top: 10px;
+  display: block;
+  font-weight: 500;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-top: 5px;
+}
+
+button {
+  margin-top: 15px;
+  background: var(--green);
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  opacity: .9;
+}
+
+/* ===== TABLE ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background: #f1fdf8;
+  text-align: left;
+}
+
+.success { color: green; }
+.error { color: red; }
+
+/* ===== FARMASI IMAGE ===== */
+.farmasi-img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  margin-bottom: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <i class="fa-solid fa-prescription-bottle-medical"></i>
+  <h1>Apotek Keluarga Wang Yi</h1>
+</header>
+
+<div class="container">
+
+  <!-- GAMBAR FARMASI -->
+  <div class="card">
+    <img class="farmasi-img"
+      src="logo_tugas.png"
+      alt="Farmasi">
+  </div>
+
+  <!-- TAMBAH OBAT -->
+  <div class="card">
+    <h3><i class="fa-solid fa-plus" style="color:var(--green)"></i> Tambah Obat</h3>
+
+    <form id="formObat">
+      <label>Nama Obat</label>
+      <input id="nama_obat" required>
+
+      <label>Kategori</label>
+      <select id="id_kategori" required>
+        <option value="">-- Pilih Kategori --</option>
+      </select>
+
+      <label>Harga</label>
+      <input type="number" id="harga" required>
+
+      <button type="submit">Simpan</button>
+      <p id="msg"></p>
+    </form>
+  </div>
+
+  <!-- IMPORT OPENFDA -->
+  <div class="card">
+    <h3><i class="fa-solid fa-cloud-arrow-down" style="color:var(--green)"></i> Import OpenFDA</h3>
+    <button onclick="importOpenFda()">Import Data</button>
+    <p id="importMsg"></p>
+  </div>
+
+  <!-- TABEL OBAT -->
+  <div class="card">
+    <h3><i class="fa-solid fa-tablets" style="color:var(--green)"></i> Daftar Obat</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Nama Obat</th>
+          <th>Kategori</th>
+          <th>Harga</th>
+        </tr>
+      </thead>
+      <tbody id="tcriableObat"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const API = 'http://localhost:3000/api'
+
+// ===== LOAD KATEGORI =====
+async function loadKategori() {
+  const res = await fetch(`${API}/kategori`)
+  const data = await res.json()
+  const select = document.getElementById('id_kategori')
+
+  data.forEach(k => {
+    const opt = document.createElement('option')
+    opt.value = k.id_kategori
+    opt.textContent = k.nama_kategori
+    select.appendChild(opt)
+  })
+}
+
+// ===== TAMBAH OBAT =====
+document.getElementById('formObat').addEventListener('submit', async e => {
+  e.preventDefault()
+
+  const payload = {
+    nama_obat: nama_obat.value,
+    id_kategori: id_kategori.value,
+    harga: harga.value
+  }
+
+  const res = await fetch(`${API}/obat`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+
+  const result = await res.json()
+  msg.textContent = 'Data berhasil disimpan'
+  msg.className = 'success'
+  loadObat()
+  e.target.reset()
+})
+
+// ===== LOAD OBAT =====
+async function loadObat() {
+  const res = await fetch(`${API}/obat`)
+  const data = await res.json()
+  tableObat.innerHTML = ''
+
+  data.forEach(o => {
+    tableObat.innerHTML += `
+      <tr>
+        <td>${o.nama_obat}</td>
+        <td>${o.nama_kategori}</td>
+        <td>Rp ${o.harga}</td>
+      </tr>`
+  })
+}
+
+// ===== IMPORT OPENFDA =====
+async function importOpenFda() {
+  await fetch(`${API}/obat/import-openfda`, { method:'POST' })
+  importMsg.textContent = 'Import berhasil'
+  importMsg.className = 'success'
+  loadObat()
+}
+
+// INIT
+loadKategori()
+loadObat()
+</script>
+
+</body>
+</html>
