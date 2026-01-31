@@ -4,12 +4,18 @@ const getAllStokout = async () =>{
     const [rows] = await db.query("select * from stok_keluar")
     return rows
 }
-
 const addStokout = async(stok_keluar)=>{
-    const {quantity} = stok_keluar
-    const query = "insert into stok_keluar" +"(quantyti)" + "values (?)"
-    const affected = await db.query (query, [quantity])
+    const {kode_sk, quantity, tanggal_keluar} = stok_keluar
+    const query = "insert into stok_keluar" + "(kode_sk, quantity, tanggal_keluar)" + "values (?,?,?)"
+    const affected = await db.query (query, [kode_sk, quantity, tanggal_keluar])
     return affected[0].affectedRows
 }
+const delStokout = async(id)=>{
+    const [result] = await db.query(
+        "DELETE FROM stok_keluar WHERE id=?",
+        [id]
+    )
+    return result.affectedRows
+}
 
-module.exports = {getAllStokout,addStokout}
+module.exports = {getAllStokout,addStokout,delStokout}
