@@ -1,43 +1,39 @@
 const db = require('../config/db')
-const dataUser = ['icikiwir'];
 
-const getAllMedicine = async () =>{
-    const [rows] = await db.query("select * from obat")
+const getAllMedicine = async ()=>{
+    const [rows] = await db.query("SELECT * FROM obat")
     return rows
 }
-const getMedicineByCode = async(code) =>{
-    const [row] = await db.query("select * from obat where nama_obat=?",[code])
+const getMedicineById = async(id)=>{
+    const [row] = await db.query(
+        "SELECT * FROM obat WHERE id_obat = ?",
+        [id]
+    )
     return row[0]
 }
-const addMedicine = async(obat)=>{
-    const {nama, harga, kategori} = obat
-    const query = "insert into obat" +"(nama, harga, kategori)" + "values (?,?,?)"
-    const affected = await db.query (query, [nama, harga, kategori])
-    return affected[0].affectedRows
+const addMedicine = async(data)=>{
+    const {nama_obat, kategori, harga} = data
+    const query = `
+        INSERT INTO obat (nama_obat, kategori, harga)
+        VALUES (?,?,?)
+    `
+    const [result] = await db.query(query,[nama_obat,kategori,harga])
+    return result.affectedRows
 }
-const delMedicine = async (id)=> {
-    const aff = await db.query("Delete from obat where nama", [id])
-    return aff[0].affectedRows
+const updateMedicine = async(id,data)=>{
+    const {nama_obat, harga} = data
+    const query = `
+        UPDATE obat SET nama_obat=?, harga=?
+        WHERE id_obat=?
+    `
+    const [result] = await db.query(query,[nama_obat,harga,id])
+    return result.affectedRows
 }
-const updateMedicine = async (nama , obat) =>{
-    const {nama, harga, kategori} = obat
-    const query = "Update obat" + "SET harga = ?, kategori = ?" + "WHERE nama_obat = ?"
-    const affected = await db.query(query, [harga, kategori, nama])
-    return affected[0].affectedRows
+const delMedicine = async(id)=>{
+    const [result] = await db.query(
+        "DELETE FROM obat WHERE id_obat=?",
+        [id]
+    )
+    return result.affectedRows
 }
-
-const getAllUser = ()=>{
-    return dataUser
-}
-
-const getUserById = (id)=>{
-    const result = []
-    if(id <= dataUser.length){
-        result.push(dataUser[id-1])
-        return dataUser[id-1]
-    }
-    
-    return []
-}
-
-module.exports = {getAllMedicine,getMedicineByCode,addMedicine,delMedicine,updateMedicine,getAllUser,getUserById}
+module.exports = {getAllMedicine,getMedicineById,addMedicine,updateMedicine,delMedicine}
