@@ -1,11 +1,13 @@
 const medicineModel = require('../models/medicineModel')
+const openFdaModel = require('../models/openFdaModel')
 
 const getAllMedicine = async(req,res) =>{
     try{
         const obat = await medicineModel.getAllMedicine()
-        res.json(obat)
+        res.status(200).json(obat)
     }
     catch (error) {
+        console.log(error);
         res.status(500).json(
             {
                 message : "Error Get All obat",
@@ -16,7 +18,7 @@ const getAllMedicine = async(req,res) =>{
 }
 const getMedicineByCode = async(req,res)=>{
     try {
-        const obat = await medicineModel.getMedicineByCode(teq.params.code)
+        const obat = await medicineModel.getMedicineByCode(req.params.code)
         if(!obat){
             return res.status(404).json({
                 message : 'Data Not Found'
@@ -28,25 +30,67 @@ const getMedicineByCode = async(req,res)=>{
         res.status(500).json({message:error})
     }
 }
+const getMedicineFromOpenFda = async (req, res) => {
+    try {
+        const obat = await openFdaModel.getOpenFdaDrugs()
+        res.status(200).json(obat)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: "Error Get Data from openFDA",
+            status: 500
+        })
+    }
+}
+const getMergeMedicine = async (req, res) => {
+    try {
+        const fdaData = await openFdaModel.getOpenFdaDrugs()
+        const localData = await medicineModel.getAllMedicine()
+
+        const result = fdaData.map(item => {
+            const genericName = item.openfda?.generic_name?.[0]
+
+            const local = localData.find(
+                o => o.nama?.toLowerCase() === genericName?.toLowerCase()
+            )
+
+            return {
+                brand_name: item.openfda?.brand_name?.[0] || '-',
+                generic_name: genericName || '-',
+                manufacturer: item.openfda?.manufacturer_name?.[0] || '-',
+                harga: local ? local.harga : null,
+                kategori: local ? local.kategori : null
+            }
+        })
+
+        res.status(200).json(result)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: "Error Merge Data",
+            status: 500
+        })
+    }
+}
 const addMedicine = async(req,res)=>{
-    const {nama, harga, kategori} = req.body
-    let isNama = true
+    const {nama_obat, harga, id_kategori} = req.body
+    let isNama_obat = true
     let isHarga = true
-    let isKategori = true
+    let isId_kategori = true
     let msg = ""
-    if(!nama){
+    if(!nama_obat){
         msg = msg + "Nama Wajib Diisi"
-        isNama = false
+        isNama_obat = false
     }
     if(!harga){
         msg = msg + "Harga Wajib DIisi"
         isHarga = false
     }
-    if(!kategori){
+    if(!id_kategori){
         msg = msg + "Kategori Wajib Diisi"
-        isKategori = false
+        isId_kategori = false
     }
-    if(isNama && isHarga && isKategori){
+    if(isNama_obat && isHarga && isId_kategori){
         try {
             const affected = await medicineModel.addMedicine(req.body)
             if(affected == 1)[
@@ -81,7 +125,7 @@ const delMedicine = async(req,res)=>{
     }
 }
 const updateMedicine = async (req,res)=>{
-    const nama = req.params.code
+    const nama_obat = req.params.code
     const {harga, kategori} = req.body
     if(!harga || !kategori){
         return res.status(400).json({
@@ -89,13 +133,13 @@ const updateMedicine = async (req,res)=>{
         })
     }
     try {
-        const existing = await medicineModel.updateMedicine(nama)
+        const existing = await medicineModel.updateMedicine(nama_obat)
         if(!existing){
             return res.status(400).json({
                 message: "Data Not Found"
             })
         }
-        const affected = await medicineModel.updateMedicine(nama , req.body)
+        const affected = await medicineModel.updateMedicine(nama_obat , req.body)
         if (affected === 1){
             res.status(200).json({
                 msg: "Update Failed"
@@ -109,50 +153,5 @@ const updateMedicine = async (req,res)=>{
         })
     }
 }
-const getAllUser = async(req,res)=>{
-    try{
-        const user = await userModel.getAllUser()
-        if(users.length > 1){
-            res.status(200).json({
-                result : user,
-                msg : "Success get All Data"
-            })
-        }
-        else{
-            res.status(200).json({
-                result : users,
-                msg : "Data Not Found"
-            })
-        }
-    }
-    catch(error){
-        res.status(500).json({
-            msg : error
-        })
-    }
-}
-const getUserById = async (req,res)=>{
-    try {
-        console.log(req.params.id);
-        
-        const user = await userModel.getUserById(req.params.id)
-        
-        if(user){
-            res.status(200).json({
-                data : user,
-                msg : "User Found"
-            })
-        }
-        else{
-            res.status(200).json({
-                msg : "User Not Found"
-            })
-        }
-    }
-    catch (error){
-        res.status(500).json({
-            msg : error
-        })
-    }
-}
-module.exports = {getAllMedicine,getMedicineByCode,addMedicine,delMedicine,updateMedicine,getAllUser,getUserById}
+
+module.exports = {getAllMedicine,getMedicineByCode,getMedicineFromOpenFda,getMergeMedicine,addMedicine,delMedicine,updateMedicine}
