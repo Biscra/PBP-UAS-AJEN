@@ -1,5 +1,4 @@
 const db = require('../config/db')
-const dataUser = ['icikiwir'];
 
 const getAllCategory = async () =>{
     const [rows] = await db.query("select * from kategori")
@@ -20,21 +19,10 @@ const delCategory = async (id)=> {
     return aff[0].affectedRows
 }
 const updateCategory = async (nama , kategori) =>{
-    const {nama} = kategori
-    const query = "Update kategori" + "SET kategori = ?" + "WHERE nama_kategori = ?"
-    const affected = await db.query(query, [nama])
+    const {nama_kategori} = kategori
+    const query = "Update kategori" + "SET nama = ?" + "WHERE nama = ?"
+    const affected = await db.query(query, [nama_kategori, nama])
     return affected[0].affectedRows
 }
-const getAllUser = ()=>{
-    return dataUser
-}
-const getUserById = (id)=>{
-    const result = []
-    if(id <= dataUser.length){
-        result.push(dataUser[id-1])
-        return dataUser[id-1]
-    }
-    return []
-}
 
-module.exports = {getAllCategory,getCategoryByCode,addCategory,delCategory,updateCategory,getAllUser,getUserById}
+module.exports = {getAllCategory,getCategoryByCode,addCategory,delCategory,updateCategory}
