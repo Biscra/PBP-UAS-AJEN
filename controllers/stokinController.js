@@ -2,8 +2,8 @@ const stokinModel = require('../models/stokinModel')
 
 const getAllStokin = async(req,res) =>{
     try{
-        const kode = await categoryModel.getAllCategory()
-        res.json(kategori)
+        const kode = await stokinModel.getAllStokin()
+        res.json()
     }
     catch (error) {
         res.status(500).json(
@@ -14,17 +14,27 @@ const getAllStokin = async(req,res) =>{
         )
     }
 }
-const addCategory = async(req,res)=>{
-    const {nama} = req.body
-    let isNama = true
+const addStokin = async(req,res)=>{
+    const {kode, quantity, tanggal_masuk} = req.body
+    let iskode = true
+    let isQuantity = true
+    let isTanggal = true
     let msg = ""
-    if(!nama){
-        msg = msg + "Nama Wajib Diisi"
-        isNama = false
+    if(!kode){
+        msg = msg + "Kode Wajib Diisi"
+        iskode = false
     }
-    if(isNama){
+    if(!quantity){
+        msg = msg + "Quantity wajib di isi"
+        isQuantity = false
+    }
+    if(!tanggal_masuk){
+        msg = msg + "Tanggal wajib diisi"
+        isTanggal = false
+    }
+    if(!iskode && isQuantity && isTanggal){
         try {
-            const affected = await categoryModel.addCategory(req.body)
+            const affected = await stokinModel.addStokin(req.body)
             if(affected == 1)[
                 res.status(200).json({
                     msg : "insert successfull",
@@ -42,3 +52,4 @@ const addCategory = async(req,res)=>{
         res.status(400).json({msg:msg})
     }
 }
+module.exports = {getAllStokin, addStokin}
